@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -13,9 +12,7 @@ export class UserService {
   ) {}
 
   async create(registerDto: RegisterDTO): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { email: registerDto.email },
-    });
+    const user = await this.findByEmail(registerDto.email);
 
     if (user) {
       throw new Error('User with this credentials already exists');
@@ -23,5 +20,37 @@ export class UserService {
       const newUser = this.userRepository.create(registerDto);
       return this.userRepository.save(newUser);
     }
+  }
+
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find({
+      select: ['id', 'email', 'firstName', 'lastName', 'role', 'createdAt'],
+    });
+  }
+
+  async findOne(id: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: id.toString() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { email: email.toString() },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async remove(id: string): Promise<void> {
+    const user = await this.findOne(id);
+    await this.userRepository.remove(user);
   }
 }
