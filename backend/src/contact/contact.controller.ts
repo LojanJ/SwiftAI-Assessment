@@ -9,8 +9,8 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
+  Put,
   Query,
   Request,
   Response,
@@ -24,6 +24,7 @@ import { CreateContactDTO } from 'src/auth/dto/create-contact.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import * as multer from 'multer';
 import { ContactService } from './contact.service';
+import { UpdateContactDTO } from './dto/update-contact.dto';
 
 @Controller('contact')
 @UseGuards(JwtAuthGuard)
@@ -76,10 +77,10 @@ export class ContactController {
     return this.contactService.findOne(id, req.user);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(
     @Param('id') id: string,
-    @Body() updateContactDTO: CreateContactDTO,
+    @Body() updateContactDTO: UpdateContactDTO,
     @UploadedFile() file: multer,
     @Request() req,
   ) {

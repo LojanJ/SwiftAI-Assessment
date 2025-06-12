@@ -5,6 +5,8 @@ import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { ValidationPipe } from '@nestjs/common';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ResponseInterceptors } from './common/interceptors/response.interceptors';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -12,7 +14,6 @@ async function bootstrap() {
 
   // Enable Helmet for security
   // Enable Compression to reduce response size
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   app.use(helmet() as unknown);
 
   app.enableCors({
@@ -33,6 +34,10 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // Applying Global Exceptions & Wrapping Responses with Interceptors
+  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptors());
 
   await app.listen(configService.get('PORT') || 3001);
 }

@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { diskStorage } from 'multer';
 import { MulterModule } from '@nestjs/platform-express';
 import { extname } from 'node:path/posix';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './users/user.module';
+import { ContactModule } from './contact/contact.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -22,15 +26,17 @@ import { extname } from 'node:path/posix';
         password: config.get('DATABASE_PASSWORD'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: config.get('NODE_ENV') === 'development',
+        migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
+        migrationsRun: true,
       }),
       inject: [ConfigService],
     }),
     MulterModule.registerAsync({
       imports: [ConfigModule],
+
       // Configure multer to store custom filename to avoid name conflicts
       // Thus including exceptions to avoid invalid formats
       useFactory: () => ({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
         storage: diskStorage({
           destination: './uploads',
           filename: (req: any, file: { originalname: string }, cb) => {
@@ -38,7 +44,6 @@ import { extname } from 'node:path/posix';
               .fill(null)
               .map(() => Math.round(Math.random() * 16).toString(16))
               .join('');
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             cb(null, `${randomName}${extname(file.originalname)}`);
           },
         }),
@@ -55,8 +60,10 @@ import { extname } from 'node:path/posix';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
+    UserModule,
+    ContactModule,
+    AdminModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
