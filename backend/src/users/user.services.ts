@@ -13,7 +13,6 @@ export class UserService {
 
   async create(registerDto: RegisterDTO): Promise<User> {
     const user = await this.findByEmail(registerDto.email);
-
     if (user) {
       throw new Error('User with this credentials already exists');
     } else {
@@ -24,7 +23,7 @@ export class UserService {
 
   async findAll(): Promise<User[]> {
     return await this.userRepository.find({
-      select: ['id', 'email', 'firstName', 'lastName', 'role', 'createdAt'],
+      select: ['id', 'email', 'name', 'role', 'createdAt'],
     });
   }
 
@@ -39,13 +38,10 @@ export class UserService {
     return user;
   }
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: { email: email.toString() },
     });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
     return user;
   }
 

@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { UserService } from 'src/users/user.services';
 import { RegisterDTO } from './dto/register.dto';
 import { LoginDTO } from './dto/login.dto';
+import { UserRole } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -23,15 +24,14 @@ export class AuthService {
       ...registerDTO,
       password: passwordHash,
     });
-
-    const payload = { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role };
+    
+    const payload = { id: user.id, email: user.email, name: user.name, role: user.role, createdAt: user.createdAt};
     return {
         accessToken: this.jwtService.sign(payload),
         user: {
           id: user.id,
           email: user.email,    
-          firstName: user.firstName,   
-          lastName: user.lastName,
+          name: user.name,   
           role: user.role,
           createdAt: user.createdAt,
         },
@@ -49,14 +49,13 @@ export class AuthService {
       throw new Error('Invalid Credentials');
     }
 
-    const payload = { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, role: user.role };
+    const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
     return {
         accessToken: this.jwtService.sign(payload),
         user: {
           id: user.id,
           email: user.email,    
-          firstName: user.firstName,
-          lastName: user.lastName,
+          name: user.name,
           role: user.role,
         },
     }

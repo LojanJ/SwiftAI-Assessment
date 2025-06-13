@@ -31,8 +31,7 @@ async function seed() {
     const admin = userRepository.create({
       email: 'admin@example.com',
       password: hashedPassword,
-      firstName: 'Admin',
-      lastName: 'User',
+      name: 'ADMIN',
       role: UserRole.ADMIN,
     });
     await userRepository.save(admin);
@@ -49,8 +48,7 @@ async function seed() {
     const user = userRepository.create({
       email: 'user@example.com',
       password: hashedPassword,
-      firstName: 'Test',
-      lastName: 'User',
+      name: 'ADMIN',
       role: UserRole.USER,
     });
     await userRepository.save(user);
