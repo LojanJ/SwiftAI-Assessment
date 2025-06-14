@@ -163,14 +163,14 @@ export const ContactForm = () => {
             }
 
             if(isEditing){
-                const response = await axios.put(`${endpointURL}/contacts/${id}`, dataForm, {
+                await axios.put(`${endpointURL}/contacts/${id}`, dataForm, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
                 toast.success('Contact updated successfully!');
             } else {
-                const response = await axios.post(`${endpointURL}/contacts`, dataForm, {
+                await axios.post(`${endpointURL}/contacts`, dataForm, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
