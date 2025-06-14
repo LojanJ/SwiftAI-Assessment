@@ -47,18 +47,12 @@ export const ContactList = () => {
                 sortOrder: sortOrder.toUpperCase()
             }
             
-            console.log('ContactList - Making request:', {
-                url: `${endpointURL}/contacts`,
-                params,
-                headers: axios.defaults.headers.common,
-                method: 'GET'
-            });
-            console.log(`${endpointURL}/contacts`)
+         
             const response = await axios.get(`${endpointURL}/contacts`, {params});
             
             // The backend returns a rssponse of { data: { data: contacts[], total, page, limit, totalPages } }
             const { data } = response.data;
-            console.log(data)
+            (data)
             setContacts(data.data);
             setTotalContacts(data.total);
             setTotalPages(data.totalPages);

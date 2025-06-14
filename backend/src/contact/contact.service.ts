@@ -10,12 +10,14 @@ import { CreateContactDTO } from 'src/auth/dto/create-contact.dto';
 import { User } from 'src/users/entities/user.entity';
 import { UpdateContactDTO } from './dto/update-contact.dto';
 import { Parser } from 'json2csv';
+import { AppMailerService } from 'src/mailer/mailer.service';
 
 @Injectable()
 export class ContactService {
   constructor(
     @InjectRepository(Contact)
     private contactRepository: Repository<Contact>,
+    private readonly mailer: AppMailerService,
   ) {}
 
   async create(
@@ -26,7 +28,20 @@ export class ContactService {
       ...createContactDTO,
       userId: user.id,
     });
-    return this.contactRepository.save(contact);
+    const savedContact = await this.contactRepository.save(contact);
+
+    const message = {
+      subject: 'You created a new contact',
+      text: `You have successfully created a new contact: ${savedContact.name}`,
+      html: `<p>You have successfully created a new contact: <b>${savedContact.name}</b></p>`,
+    };
+    await this.mailer.sendContactCreated(
+      user.email,
+      message.subject,
+      message.text,
+      message.html,
+    );
+    return savedContact;
   }
 
   // Method to find contacts with pagination, search and sorting
@@ -45,8 +60,8 @@ export class ContactService {
 
       if (search) {
         queryBuilder.andWhere(
-          '(contact.name ILIKE :search OR contact.email ILIKE :search)',
-          { search: `%${search}%` },
+          `to_tsvector('english', contact.name || ' ' || contact.email) @@ plainto_tsquery('english', :search)`,
+          { search },
         );
       }
 
@@ -98,13 +113,26 @@ export class ContactService {
     if (!contact) {
       throw new NotFoundException('Contact not located');
     }
-    await this.contactRepository.remove(contact);
+
+    const removed = await this.contactRepository.remove(contact);
+    const message = {
+      subject: 'You created removed a contact',
+      text: `You have successfully removed a contact: ${removed.name}`,
+      html: `<p>You have successfully removed a contact from your list: <b>${removed.name}</b></p>`,
+    };
+    await this.mailer.sendContactCreated(
+      user.email,
+      message.subject,
+      message.text,
+      message.html,
+    );
+    return;
   }
 
   async exportCsv(user: User): Promise<string> {
     const contacts = await this.contactRepository.find({
       where: { userId: user.id },
-      select: ['id', 'name', 'email', 'phone', 'createdAt', ],
+      select: ['id', 'name', 'email', 'phone', 'createdAt'],
     });
 
     const parser = new Parser({

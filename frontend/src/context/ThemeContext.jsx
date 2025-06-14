@@ -14,11 +14,18 @@ export const useTheme = () => {
 export function ThemeProvider({children}) {
     const [isDark, setIsDark] = useState(() => {
         const saved = localStorage.getItem('theme');
-        return saved ? saved === 'dark' : window.matchMedia('(prefer-color-schema: dark)').matches
-    })
-    const toggleTheme = () => setIsDark(!isDark);
+        if (saved) return saved === 'dark';
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    });
 
-    // Listen for system theme changes
+    const toggleTheme = () => setIsDark(prev => !prev);
+
+    useEffect(() => {
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.body.classList.toggle('dark-mode', isDark);
+        document.body.classList.toggle('light-mode', !isDark);
+    }, [isDark]);
+
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleChange = (e) => {
@@ -27,7 +34,6 @@ export function ThemeProvider({children}) {
                 setIsDark(e.matches);
             }
         };
-
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);

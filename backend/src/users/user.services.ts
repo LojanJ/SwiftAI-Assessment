@@ -49,4 +49,38 @@ export class UserService {
     const user = await this.findOne(id);
     await this.userRepository.remove(user);
   }
+
+  async searchUsers(
+    search: string,
+    page: number = 1,
+    limit: number = 10,
+    sortBy: string = 'createdAt',
+    sortOrder: 'ASC' | 'DESC' = 'DESC',
+  ) {
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    if (search) {
+      queryBuilder.where(
+        `to_tsvector('english', user.name || ' ' || user.email) @@ plainto_tsquery('english', :search)`,
+        { search },
+      );
+    }
+
+    const total = await queryBuilder.getCount();
+
+    queryBuilder
+      .orderBy(`user.${sortBy}`, sortOrder)
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const users = await queryBuilder.getMany();
+
+    return {
+      data: users,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 }

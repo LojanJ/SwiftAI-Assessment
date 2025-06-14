@@ -18,7 +18,7 @@ async function bootstrap() {
   app.use(helmet() as unknown);
 
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:3001'],
+    origin: true,
     allowedHeaders: 'Content-Type, Authorization',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,

@@ -88,7 +88,6 @@ export const ContactForm = () => {
                 return;
             }
 
-            console.log('Selected file:', file);
             setFormData(prev => ({
                 ...prev,
                 photo: file
@@ -160,16 +159,8 @@ export const ContactForm = () => {
             dataForm.append('phone', formData.phone.trim());
 
             if(formData.photo){
-                console.log('Appending photo to form:', formData.photo);
                 dataForm.append('file', formData.photo);
             }
-
-            console.log('Form data being sent:', {
-                name: formData.name,
-                email: formData.email,
-                phone: formData.phone,
-                hasPhoto: !!formData.photo
-            });
 
             if(isEditing){
                 const response = await axios.put(`${endpointURL}/contacts/${id}`, dataForm, {
@@ -177,7 +168,6 @@ export const ContactForm = () => {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
-                console.log('Update response:', response.data);
                 toast.success('Contact updated successfully!');
             } else {
                 const response = await axios.post(`${endpointURL}/contacts`, dataForm, {
@@ -185,7 +175,6 @@ export const ContactForm = () => {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
-                console.log('Create response:', response.data);
                 toast.success('Contact saved successfully!');
             }
             navigate('/contacts');

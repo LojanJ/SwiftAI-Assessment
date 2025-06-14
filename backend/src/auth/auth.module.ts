@@ -7,11 +7,13 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LocalStrategy } from './strategies/local.strategies';
 import { JwtStrategy } from './strategies/jwt-strategies';
+import { AppMailerModule } from 'src/mailer/mailer.module';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
+    AppMailerModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

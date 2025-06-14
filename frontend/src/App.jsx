@@ -7,6 +7,7 @@ import { Sun, Moon } from 'lucide-react';
 import Login from "./components/Login";
 import { ContactList } from "./components/ContactList";
 import { ContactForm } from "./components/ContactForm";
+import { AdminPanel } from "./components/Admin";
 
 const ProtectedRoute = ({children}) => {
   const {user} = useAuth();
@@ -16,6 +17,16 @@ const ProtectedRoute = ({children}) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return children;
+}
+
+const AdminRoute = ({children}) => {
+  const {user} = useAuth();
+  const location = useLocation();
+
+  if (String(!user || !user?.role).toLocaleLowerCase() === 'admin'){
+    return <Navigate to="login" state={{from: location}} replace />;
+  }
+  return children
 }
 
 const PublicRoute = ({children}) => {
@@ -33,7 +44,6 @@ const Navigation = () => {
   const {user, logout} = useAuth();
   const {isDark, toggleTheme} = useTheme();
   const navigate = useNavigate();
-
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -83,20 +93,25 @@ const Navigation = () => {
                 </Nav.Link>
               </>
             )}
+            {
+              user?.role === "admin" && (
+                <Nav.Link
+                href="/admin"
+                className="fw-medium py-2 "
+                style={{
+                  background: 'linear-gradient(135deg, #6f00ff, #00e0ff)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  display: 'inline-block',
+                  transition: 'transform 0.2s',
+                }}>
+                  Admin
+                </Nav.Link>
+              )
+            }
+
           </Nav>
           <Nav className="d-flex align-items-center">
-            <Button 
-              variant={isDark ? "outline-light" : "outline-dark"}
-              size="sm" 
-              onClick={toggleTheme}
-              className="me-3"
-              style={{
-                borderWidth: '2px',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
-            </Button>
             {user ? (
               <>
                 <span 
@@ -105,17 +120,35 @@ const Navigation = () => {
                 >
                   Welcome, {user?.name}
                 </span>
-                <Button 
-                  variant={isDark ? "outline-light" : "outline-dark"}
-                  onClick={handleLogout}
-                  className="fw-medium"
-                  style={{
-                    borderWidth: '2px',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  Logout
-                </Button>
+
+                <div className="flex align-items-center">
+                  <Button 
+                    variant={isDark ? "outline-light" : "outline-dark"}
+                    size="sm" 
+                    onClick={toggleTheme}
+                    className="me-3"
+                    style={{
+                      borderWidth:'2px',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {isDark ? <Sun size={22} /> : <Moon size={22} />}
+                  </Button>
+                  <Button 
+                    variant={isDark ? "outline-light" : "outline-dark"}
+                    size="sm"
+                    onClick={handleLogout}
+                    className="fw-small"
+                    style={{
+                      borderWidth: '2px',
+                      transition: 'all 0.3s ease',
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '1rem'
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </div>
               </>
             ) : (
               <>
@@ -232,6 +265,13 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+              <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPanel/>
+                </ProtectedRoute>
+              }/>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
