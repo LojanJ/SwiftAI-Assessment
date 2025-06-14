@@ -1,6 +1,15 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const ThemeContext = createContext();
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const useTheme = () => {
+    const context = useContext(ThemeContext);
+     if (!context) {
+        throw new Error('useTheme must be used within a ThemeProvider');
+    }
+    return context;
+}
 
 export function ThemeProvider({children}) {
     const [isDark, setIsDark] = useState(() => {
@@ -9,14 +18,29 @@ export function ThemeProvider({children}) {
     })
     const toggleTheme = () => setIsDark(!isDark);
 
+    // Listen for system theme changes
     useEffect(() => {
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
-    }, [isDark])
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleChange = (e) => {
+            const saved = localStorage.getItem('theme');
+            if (!saved) {
+                setIsDark(e.matches);
+            }
+        };
+
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, []);
+
+    const value = {
+        isDark,
+        toggleTheme,
+        theme: isDark ? 'dark' : 'light'
+    };
 
     return (
-        <ThemeContext.Provider value={{isDark, toggleTheme}}>
+        <ThemeContext.Provider value={value}>
             {children}
         </ThemeContext.Provider>
-    )
+    );
 }

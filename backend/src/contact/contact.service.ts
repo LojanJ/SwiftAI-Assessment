@@ -38,30 +38,39 @@ export class ContactService {
     sortBy: string = 'createdAt',
     sortOrder: 'ASC' | 'DESC' = 'DESC',
   ) {
-    const queryBuilder = this.contactRepository
-      .createQueryBuilder('contact')
-      .where('contact.userId = :userId', { userId: user.id });
+    try {
+      const queryBuilder = this.contactRepository
+        .createQueryBuilder('contact')
+        .where('contact.userId = :userId', { userId: user.id });
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(contact.name ILIKE :search OR contact.email ILIKE :search',
-        { search: `%${search}%` },
-      );
+      if (search) {
+        queryBuilder.andWhere(
+          '(contact.name ILIKE :search OR contact.email ILIKE :search)',
+          { search: `%${search}%` },
+        );
+      }
+
+      // Get total count before pagination
+      const total = await queryBuilder.getCount();
+
+      queryBuilder
+        .orderBy(`contact.${sortBy}`, sortOrder)
+        .skip((page - 1) * limit)
+        .take(limit);
+
+      const contacts = await queryBuilder.getMany();
+
+      return {
+        data: contacts,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      };
+    } catch (error) {
+      console.error('Error in findAll contacts:', error);
+      throw error;
     }
-
-    queryBuilder
-      .orderBy(`contact.${sortBy}`, sortOrder)
-      .skip((page - 1) * limit)
-      .take(limit);
-
-    const contacts = await queryBuilder.getMany();
-    return {
-      data: contacts,
-      total: contacts.length,
-      page: page,
-      limit: limit,
-      totalPages: Math.ceil(contacts.length / limit),
-    };
   }
 
   async findOne(id: string, user: User): Promise<Contact> {
@@ -95,11 +104,11 @@ export class ContactService {
   async exportCsv(user: User): Promise<string> {
     const contacts = await this.contactRepository.find({
       where: { userId: user.id },
-      select: ['name', 'email', 'phone', 'createdAt'],
+      select: ['id', 'name', 'email', 'phone', 'createdAt', ],
     });
 
     const parser = new Parser({
-      fields: ['name', 'email', 'phone', 'createdAt'],
+      fields: ['id', 'name', 'email', 'phone', 'createdAt'],
       header: true,
     });
 

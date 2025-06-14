@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -22,20 +23,31 @@ import { Response as Res } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateContactDTO } from 'src/auth/dto/create-contact.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import * as multer from 'multer';
+import { diskStorage } from 'multer';
 import { ContactService } from './contact.service';
 import { UpdateContactDTO } from './dto/update-contact.dto';
 
-@Controller('contact')
+@Controller('contacts')
 @UseGuards(JwtAuthGuard)
 export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + '-' + file.originalname);
+        },
+      }),
+    }),
+  )
   create(
     @Body() createCon: CreateContactDTO,
-    @UploadedFile() file: multer,
+    @UploadedFile() file: any,
     @Request() req,
   ) {
     if (file) {
@@ -45,7 +57,7 @@ export class ContactController {
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Request() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
@@ -54,17 +66,22 @@ export class ContactController {
     @Query('sortOrder', new DefaultValuePipe('DESC'))
     sortOrder?: 'ASC' | 'DESC',
   ) {
-    return this.contactService.findAll(
-      req.user,
-      page,
-      limit,
-      search,
-      sortBy,
-      sortOrder,
-    );
+    try {
+      return await this.contactService.findAll(
+        req.user,
+        page,
+        limit,
+        search,
+        sortBy,
+        sortOrder,
+      );
+    } catch (error) {
+      console.error('Error in findAll');
+      throw error;
+    }
   }
 
-  @Get('export/CSV')
+  @Get('export')
   async exportCSV(@Request() req, @Response() res: Res) {
     const csv = await this.contactService.exportCsv(req.user);
     res.header('Content-Type', 'text/csv');
@@ -78,10 +95,22 @@ export class ContactController {
   }
 
   @Put(':id')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads',
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + '-' + file.originalname);
+        },
+      }),
+    }),
+  )
   update(
     @Param('id') id: string,
     @Body() updateContactDTO: UpdateContactDTO,
-    @UploadedFile() file: multer,
+    @UploadedFile() file: any,
     @Request() req,
   ) {
     if (file) {

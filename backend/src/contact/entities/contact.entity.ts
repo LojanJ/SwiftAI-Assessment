@@ -23,7 +23,7 @@ export class Contact {
   @Column()
   phone: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, name: 'photo' })
   profilePhoto: string;
 
   @ManyToOne(() => User, (user) => user.contacts, { onDelete: 'CASCADE' })
